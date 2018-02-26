@@ -1,0 +1,138 @@
+#Create a virtual machine with PowerShell
+#https://docs.microsoft.com/en-us/azure/virtual-machines/scripts/virtual-machines-windows-powershell-sample-create-vm-quick?toc=%2fpowershell%2fmodule%2ftoc.json
+#
+#
+#This sample requires the Azure PowerShell module version 5.1.1 or later. 
+#Run:
+Get-Module -ListAvailable AzureRM
+#
+#check PS version
+$PSVersionTable
+#
+#
+#
+
+#Install and configure Azure PowerShell
+#Installing Azure PowerShell from the PowerShell Gallery is the preferred method of installation.
+##
+##
+
+## Step 1: Install PowerShellGet
+#
+#Installing items from the PowerShell Gallery requires the PowerShellGet module. 
+#Make sure you have the appropriate version of PowerShellGet and other system requirements. 
+#Run the following command to see if you have PowerShellGet installed on your system:
+#
+Get-Module PowerShellGet -list | Select-Object Name,Version,Path
+#OK
+##
+##
+
+## Step 2: Install Azure PowerShell
+#https://docs.microsoft.com/en-us/powershell/azure/install-azurerm-ps?view=azurermps-5.2.0
+#Installing Azure PowerShell from the PowerShell Gallery requires elevated privileges. 
+#Run the following command from an elevated PowerShell session:
+# Install the Azure Resource Manager modules from the PowerShell Gallery
+Install-Module AzureRM -AllowClobber
+#Answer 'Yes' or 'Yes to All' to continue with the installation.
+##
+##
+
+## Step 3: Load the AzureRM module
+#
+#Once the module is installed, you need to load the module into your PowerShell session. You should do this in a normal (non-elevated) PowerShell session. 
+#Modules are loaded using the Import-Module cmdlet, as follows:
+#
+Import-Module AzureRM
+#
+#
+#
+#Login to azure 
+Login-AzureRmAccount 
+#
+##Login to azure and provide username pass
+#Login-AzureRmAccount -AccountId petar.picuric@endava.com 
+#get-help Login-AzureRmAccount AzureRmProfile –Path C:\temp\ansible\AzureRmProfile.json what-if
+##To set up persistence (save profile session for future run), start a PowerShell session and authenticate (e.g. run Login-AzureRmAccount).
+##From that session, run
+#Save-AzureRmProfile –Path C:\temp\ansible\AzureRmProfile.json
+##Then update your profile (I like to run “ise $profile”) to include
+ise $profile
+#
+Select-AzureRmProfile –Path C:\temp\ansible\AzureRmProfile.json | out-null
+#
+#
+#
+#
+##
+##
+
+## Step 4
+#This script creates an Azure Virtual Machine running Windows Server 2016. After running the script, you can access the virtual machine over RDP.
+#
+#
+# Variables for common values
+$resourceGroup = "LabPP"
+$location = "westeurope"
+$vmName = "ansiblevmpp02"
+
+# Create user object
+$cred = Get-Credential -Message "Enter a username and password for the virtual machine."
+
+# Create a resource group
+New-AzureRmResourceGroup -Name $resourceGroup -Location $location
+
+# Create a virtual machine
+New-AzureRmVM `
+  -ResourceGroupName $resourceGroup `
+  -Name $vmName `
+  -Location $location `
+  -ImageName "Win2016Datacenter" `
+  -VirtualNetworkName "ansible-vnet" `
+  -SubnetName "tower-subnet" `
+  -SecurityGroupName "ansibleawx-nsg" `
+  -PublicIpAddressName "MyPublicIp" `
+  -Credential $cred `
+  -OpenPorts 3389
+
+##
+##
+
+## Step 5
+# Clean up deployment
+# Run the following command to remove the resource group, VM, and all related resources.
+Remove-AzureRmResourceGroup -Name $resourceGroup
+
+
+
+
+
+
+Get-AzureRmVM -ResourceGroupName labrg -Name ansiblevmpp01
+
+Remove-AzureRmVM -ResourceGroupName labrg -Name ansiblevmpp01 -WhatIf
+
+Remove-AzureRmVMNetworkInterface -VM ansiblevmpp01 -WhatIf
+
+$vm = Get-AzureRmVM –Name nsiblevmpp01 –ResourceGroupName labrg
+
+
+
+#logout
+Logout-AzureRmAccount
+
+
+
+
+#   P.S.
+#   Things to include/consider
+#
+# 	Name
+# •	OS
+# 	Location
+# •	VM Disk Type
+# 	Username/Password
+# •	VM Type/Size
+# 	Resource Group –Create new one or add to existing
+# 	VNet–Create new one or add to existing              
+# •	Storage account–Create new one or add to existing        
